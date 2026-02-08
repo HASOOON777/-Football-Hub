@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Major football competitions - Champions League, Premier League, World Cup & more">
+  <title>Competitions - Football Hub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">⚽ Football Hub</div>
+    
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="matches.html">Matches</a></li>
+      <li><a href="standings.html">Standings</a></li>
+      <li><a href="news.html">News</a></li>
+      <li><a href="stats.html">Stats</a></li>
+      <li><a href="competition.html" class="active">Competitions</a></li>
+    </ul>
+
+    <div class="hamburger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </nav>
+
+  <header class="page-header">
+    <h1>🏆 Competitions</h1>
+    <p>Major leagues, cups & international tournaments</p>
+  </header>
+
+  <main class="competitions-main">
+    <div id="competitions-container" class="competitions-grid">
+      <p class="loading"><i class="fas fa-spinner fa-spin"></i> Loading competitions...</p>
+    </div>
+  </main>
+
+  <script>
+    const API_KEY = "3770b89269fd870e6ebd788a281e1afa"; // ✨ API-Sports key
+    const API_BASE = "https://v3.football.api-sports.io";
+
+    const container = document.getElementById("competitions-container");
+
+    // قائمة المسابقات اللي هنعرضها (يمكن توسيعها)
+    const popularLeagues = [39, 140, 135, 78, 61, 2, 1, 3]; // Premier, LaLiga, SerieA, Bundesliga, Ligue1, UCL, WC, Euro
+
+    async function fetchCompetitions() {
+      try {
+        container.innerHTML = '<p class="loading"><i class="fas fa-spinner fa-spin"></i> Fetching major competitions...</p>';
+
+        const response = await fetch(`${API_BASE}/leagues`, {
+          headers: { "x-apisports-key": API_KEY }
+        });
+
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+
+        const data = await response.json();
+
+        if (!data.response || data.response.length === 0) {
+          container.innerHTML = '<p class="no-data">No competitions data available</p>';
+          return;
+        }
+
+        container.innerHTML = "";
+
+        // فلترة المسابقات الشعبية فقط (أو كلها لو عايز)
+        const filtered = data.response.filter(league => 
+          popularLeagues.includes(league.league.id)
+        );
+
+        filtered.forEach(comp => {
+          const c = comp.league;
+          const country = comp.country;
+
+          const card = document.createElement("div");
+          card.className = "competition-card";
+
+          card.innerHTML = `
+            <img src="${c.logo}" alt="${c.name}" class="comp-logo">
+            <h3>${c.name}</h3>
+            <p class="country">${country.name} ${country.code ? `(${country.code})` : ""}</p>
+            <p class="type">${c.type === "League" ? "Domestic League" : c.type}</p>
+            <a href="standings.html?league=${c.id}" class="comp-link">View Standings →</a>
+          `;
+
+          container.appendChild(card);
+        });
+
+      } catch (error) {
+        container.innerHTML = '<p class="error">Error loading competitions. Check API key or connection.</p>';
+        console.error(error);
+      }
+    }
+
+    // Load on page load
+    fetchCompetitions();
+
+    // Hamburger menu
+    const hamburger = document.querySelector('.hamburger');
+    const navLinks = document.querySelector('.nav-links');
+    hamburger.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+  </script>
+</body>
+</html>
