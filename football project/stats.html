@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Football player stats, top scorers, assists, clean sheets & more">
+  <title>Stats & Top Performers - Football Hub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">⚽ Football Hub</div>
+    
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="matches.html">Matches</a></li>
+      <li><a href="standings.html">Standings</a></li>
+      <li><a href="news.html">News</a></li>
+      <li><a href="stats.html" class="active">Stats</a></li>
+      <li><a href="competition.html">Competitions</a></li>
+    </ul>
+
+    <div class="hamburger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </nav>
+
+  <header class="page-header">
+    <h1>📈 Stats & Top Performers</h1>
+    <p>Leading goalscorers, assists, clean sheets and player rankings</p>
+  </header>
+
+  <main class="stats-main">
+    <!-- Stats Type Selector -->
+    <div class="stats-selector">
+      <label for="stats-type">Select Stat Type:</label>
+      <select id="stats-type">
+        <option value="topscorers">Top Goalscorers</option>
+        <option value="topassists">Top Assists</option>
+        <option value="clean-sheets">Most Clean Sheets (Goalkeepers)</option>
+        <!-- يمكن إضافة المزيد لاحقًا -->
+      </select>
+
+      <label for="league-select" style="margin-left: 2rem;">League:</label>
+      <select id="league-select">
+        <option value="39">Premier League</option>
+        <option value="140">La Liga</option>
+        <option value="135">Serie A</option>
+        <option value="78">Bundesliga</option>
+        <option value="61">Ligue 1</option>
+      </select>
+    </div>
+
+    <div id="stats-container" class="stats-grid">
+      <p class="loading"><i class="fas fa-spinner fa-spin"></i> Loading player stats...</p>
+    </div>
+  </main>
+
+  <script>
+    const API_KEY = "3770b89269fd870e6ebd788a281e1afa"; // ✨ API-Sports key
+    const API_BASE = "https://v3.football.api-sports.io";
+
+    const statsTypeSelect = document.getElementById("stats-type");
+    const leagueSelect = document.getElementById("league-select");
+    const container = document.getElementById("stats-container");
+
+    async function fetchStats() {
+      const type = statsTypeSelect.value;
+      const league = leagueSelect.value;
+      const season = new Date().getFullYear();
+
+      let endpoint = "";
+      if (type === "topscorers") endpoint = `/players/topscorers?league=${league}&season=${season}`;
+      else if (type === "topassists") endpoint = `/players/topassists?league=${league}&season=${season}`;
+      else if (type === "clean-sheets") endpoint = `/players/topscorers?league=${league}&season=${season}&type=goals&filter=goalkeeper`; // تعديل حسب الـ API
+
+      try {
+        container.innerHTML = '<p class="loading"><i class="fas fa-spinner fa-spin"></i> Loading stats...</p>';
+
+        const response = await fetch(`${API_BASE}${endpoint}`, {
+          headers: { "x-apisports-key": API_KEY }
+        });
+
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+
+        const data = await response.json();
+
+        if (!data.response || data.response.length === 0) {
+          container.innerHTML = '<p class="no-data">No stats available for this selection yet</p>';
+          return;
+        }
+
+        container.innerHTML = "";
+
+        // عرض اللاعبين في grid أو list
+        const statsList = document.createElement("div");
+        statsList.className = "stats-list";
+
+        data.response.slice(0, 20).forEach((playerStat, index) => {  // أول 20 بس عشان السرعة
+          const p = playerStat.player;
+          const stats = playerStat.statistics[0];
+
+          let statValue = "";
+          if (type === "topscorers") statValue = stats.goals.total;
+          else if (type === "topassists") statValue = stats.goals.assists;
+          else if (type === "clean-sheets") statValue = stats.goals.conceded === 0 ? stats.games.appearences : 0; // تعديل
+
+          const card = document.createElement("div");
+          card.className = "player-stat-card";
+
+          card.innerHTML = `
+            <div class="rank">#${index + 1}</div>
+            <img src="${p.photo}" alt="${p.name}" class="player-photo">
+            <div class="player-info">
+              <h3>${p.name}</h3>
+              <p class="team">${stats.team.name}</p>
+              <p class="stat-value">${statValue} ${type === "topscorers" ? "Goals" : type === "topassists" ? "Assists" : "Clean Sheets"}</p>
+              <p class="matches">Matches: ${stats.games.appearences || "N/A"}</p>
+            </div>
+          `;
+
+          statsList.appendChild(card);
+        });
+
+        container.appendChild(statsList);
+
+      } catch (error) {
+        container.innerHTML = '<p class="error">Error loading stats. Check API key or selection.</p>';
+        console.error(error);
+      }
+    }
+
+    // Load on change
+    statsTypeSelect.addEventListener("change", fetchStats);
+    leagueSelect.addEventListener("change", fetchStats);
+
+    // Load default on page load
+    fetchStats();
+
+    // Hamburger
+    const hamburger = document.querySelector('.hamburger');
+    const navLinks = document.querySelector('.nav-links');
+    hamburger.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+  </script>
+</body>
+</html>

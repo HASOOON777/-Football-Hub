@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Today's football matches - Live scores and fixtures">
+  <title>Today's Matches - Football Hub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navbar (نفس اللي في الـ home) -->
+  <nav class="navbar">
+    <div class="logo">⚽ Football Hub</div>
+    
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="matches.html" class="active">Matches</a></li>
+      <li><a href="standings.html">Standings</a></li>
+      <li><a href="news.html">News</a></li>
+      <li><a href="stats.html">Stats</a></li>
+      <li><a href="competition.html">Competitions</a></li>
+    </ul>
+
+    <div class="hamburger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </nav>
+
+  <header class="page-header">
+    <h1>Today's Matches ⚽</h1>
+    <p>Live scores, upcoming fixtures & results</p>
+  </header>
+
+  <main class="matches-main">
+    <div id="matches-container" class="matches-grid">
+      <!-- سيتم ملؤه بالـ JS -->
+      <div class="loading">Loading today's matches...</div>
+    </div>
+  </main>
+
+  <script>
+    const today = new Date().toISOString().split("T")[0];
+    const API_URL = `https://v3.football.api-sports.io/fixtures?date=${today}`;
+    const API_KEY = "3770b89269fd870e6ebd788a281e1afa"; // ✨ ضع مفتاح API-Sports هنا (احصل عليه من https://dashboard.api-football.com/)
+
+    const container = document.getElementById("matches-container");
+
+    async function getMatches() {
+      try {
+        container.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading matches...</div>';
+
+        const response = await fetch(API_URL, {
+          method: "GET",
+          headers: { "x-apisports-key": API_KEY }
+        });
+
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+
+        const data = await response.json();
+
+        container.innerHTML = "";
+
+        if (!data.response || data.response.length === 0) {
+          container.innerHTML = '<p class="no-data">No matches scheduled today 😴</p>';
+          return;
+        }
+
+        data.response.forEach(match => {
+          const fix = match.fixture;
+          const home = match.teams.home;
+          const away = match.teams.away;
+          const goals = match.goals;
+          const status = fix.status;
+
+          const isLive = ["1H", "HT", "2H", "ET", "BT", "P", "LIVE"].includes(status.short);
+          const isFinished = ["FT", "AET", "PEN"].includes(status.short);
+
+          const scoreText = isFinished || isLive
+            ? `${goals.home ?? "-"} - ${goals.away ?? "-"}`
+            : new Date(fix.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+          const statusClass = isLive ? "status-live" : isFinished ? "status-finished" : "status-upcoming";
+
+          const matchCard = document.createElement("div");
+          matchCard.className = "match-card";
+
+          matchCard.innerHTML = `
+            <div class="match-league">
+              <img src="${match.league.logo}" alt="${match.league.name}" class="league-logo">
+              <span>${match.league.name} • ${match.league.country}</span>
+            </div>
+
+            <div class="match-teams">
+              <div class="team home">
+                <img src="${home.logo}" alt="${home.name}" class="team-logo">
+                <span>${home.name}</span>
+              </div>
+
+              <div class="match-score ${statusClass}">
+                <span>${scoreText}</span>
+              </div>
+
+              <div class="team away">
+                <img src="${away.logo}" alt="${away.name}" class="team-logo">
+                <span>${away.name}</span>
+              </div>
+            </div>
+
+            <div class="match-info">
+              <p><i class="far fa-clock"></i> ${new Date(fix.date).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+              <p class="match-status">${status.long} ${fix.status.elapsed ? `(${fix.status.elapsed}')` : ''}</p>
+              <p><i class="fas fa-stadium"></i> ${fix.venue?.name || 'N/A'}</p>
+            </div>
+          `;
+
+          container.appendChild(matchCard);
+        });
+      } catch (error) {
+        container.innerHTML = '<p class="error">Error loading matches. Check your API key or connection.</p>';
+        console.error(error);
+      }
+    }
+
+    getMatches();
+
+    // Hamburger menu (نفس اللي في home)
+    const hamburger = document.querySelector('.hamburger');
+    const navLinks = document.querySelector('.nav-links');
+    hamburger.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+  </script>
+</body>
+</html>

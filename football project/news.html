@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Latest football news, transfers, injuries & updates">
+  <title>Football News - Football Hub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">⚽ Football Hub</div>
+    
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="matches.html">Matches</a></li>
+      <li><a href="standings.html">Standings</a></li>
+      <li><a href="news.html" class="active">News</a></li>
+      <li><a href="stats.html">Stats</a></li>
+      <li><a href="competition.html">Competitions</a></li>
+    </ul>
+
+    <div class="hamburger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </nav>
+
+  <header class="page-header">
+    <h1>📰 Football News</h1>
+    <p>Latest updates, transfers, injuries & big stories</p>
+  </header>
+
+  <main class="news-main">
+    <div id="news-container" class="news-grid">
+      <p class="loading"><i class="fas fa-spinner fa-spin"></i> Loading latest news...</p>
+    </div>
+  </main>
+
+  <script>
+    const NEWS_API_KEY = "3770b89269fd870e6ebd788a281e1afa"; // ✨ من https://newsapi.org (مجاني)
+    const NEWS_API_URL = `https://newsapi.org/v2/everything?q=football+OR+soccer+-bitcoin&language=en&sortBy=publishedAt&pageSize=12&apiKey=${NEWS_API_KEY}`;
+
+    const container = document.getElementById("news-container");
+
+    async function fetchNews() {
+      try {
+        container.innerHTML = '<p class="loading"><i class="fas fa-spinner fa-spin"></i> Fetching latest football news...</p>';
+
+        const response = await fetch(NEWS_API_URL);
+        if (!response.ok) throw new Error(`News API error: ${response.status}`);
+
+        const data = await response.json();
+
+        if (!data.articles || data.articles.length === 0) {
+          container.innerHTML = '<p class="no-data">No recent football news available right now</p>';
+          return;
+        }
+
+        container.innerHTML = "";
+
+        data.articles.forEach(article => {
+          const newsCard = document.createElement("div");
+          newsCard.className = "news-card";
+
+          const image = article.urlToImage 
+            ? `<img src="${article.urlToImage}" alt="${article.title}" class="news-image">`
+            : `<div class="news-placeholder"><i class="fas fa-newspaper fa-3x"></i></div>`;
+
+          const date = new Date(article.publishedAt).toLocaleDateString([], {
+            year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+          });
+
+          newsCard.innerHTML = `
+            ${image}
+            <div class="news-content">
+              <h3><a href="${article.url}" target="_blank" rel="noopener noreferrer">${article.title}</a></h3>
+              <p class="news-desc">${article.description || "Click to read full article"}</p>
+              <div class="news-meta">
+                <span><i class="far fa-clock"></i> ${date}</span>
+                <span><i class="fas fa-newspaper"></i> ${article.source.name}</span>
+              </div>
+            </div>
+          `;
+
+          container.appendChild(newsCard);
+        });
+
+      } catch (error) {
+        container.innerHTML = '<p class="error">Could not load news. Check your NewsAPI key or try later.</p>';
+        console.error(error);
+      }
+    }
+
+    // Load news on page load
+    fetchNews();
+
+    // Hamburger menu
+    const hamburger = document.querySelector('.hamburger');
+    const navLinks = document.querySelector('.nav-links');
+    hamburger.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="League standings and tables - Premier League, La Liga, Serie A & more">
+  <title>League Standings - Football Hub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">⚽ Football Hub</div>
+    
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="matches.html">Matches</a></li>
+      <li><a href="standings.html" class="active">Standings</a></li>
+      <li><a href="news.html">News</a></li>
+      <li><a href="stats.html">Stats</a></li>
+      <li><a href="competition.html">Competitions</a></li>
+    </ul>
+
+    <div class="hamburger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </nav>
+
+  <header class="page-header">
+    <h1>📊 League Standings</h1>
+    <p>Current tables for top European leagues</p>
+  </header>
+
+  <main class="standings-main">
+    <!-- League Selector -->
+    <div class="league-selector">
+      <label for="league-select">Select League:</label>
+      <select id="league-select">
+        <option value="">-- Choose a league --</option>
+        <option value="39">Premier League (England)</option>
+        <option value="140">La Liga (Spain)</option>
+        <option value="135">Serie A (Italy)</option>
+        <option value="78">Bundesliga (Germany)</option>
+        <option value="61">Ligue 1 (France)</option>
+        <!-- أضف المزيد لو عايز (مثل Champions League = 2) -->
+      </select>
+    </div>
+
+    <div id="standings-container" class="standings-table-container">
+      <p class="loading"><i class="fas fa-spinner fa-spin"></i> Select a league to view standings...</p>
+    </div>
+  </main>
+
+  <script>
+    const API_KEY = "3770b89269fd870e6ebd788a281e1afa"; // ✨ ضع مفتاح API-Sports هنا
+    const API_BASE = "https://v3.football.api-sports.io";
+
+    const leagueSelect = document.getElementById("league-select");
+    const container = document.getElementById("standings-container");
+
+    async function fetchStandings(leagueId) {
+      if (!leagueId) {
+        container.innerHTML = '<p class="loading">Select a league above</p>';
+        return;
+      }
+
+      try {
+        container.innerHTML = '<p class="loading"><i class="fas fa-spinner fa-spin"></i> Loading standings...</p>';
+
+        const season = new Date().getFullYear(); // Current season
+        const response = await fetch(`${API_BASE}/standings?league=${leagueId}&season=${season}`, {
+          headers: { "x-apisports-key": API_KEY }
+        });
+
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+
+        const data = await response.json();
+
+        if (!data.response || !data.response[0]?.league?.standings?.[0]) {
+          container.innerHTML = '<p class="no-data">No standings available for this league/season</p>';
+          return;
+        }
+
+        const standings = data.response[0].league.standings[0]; // Usually first is total table
+
+        let tableHTML = `
+          <table class="standings-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Team</th>
+                <th>MP</th>
+                <th>W</th>
+                <th>D</th>
+                <th>L</th>
+                <th>GF</th>
+                <th>GA</th>
+                <th>GD</th>
+                <th>Pts</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        standings.forEach((team, index) => {
+          const t = team.team;
+          const stats = team.all; // played, win, draw, lose, goals for/against
+
+          tableHTML += `
+            <tr>
+              <td>${team.rank}</td>
+              <td class="team-name">
+                <img src="${t.logo}" alt="${t.name}" class="team-logo-small">
+                ${t.name}
+              </td>
+              <td>${stats.played}</td>
+              <td>${stats.win}</td>
+              <td>${stats.draw}</td>
+              <td>${stats.lose}</td>
+              <td>${stats.goals.for}</td>
+              <td>${stats.goals.against}</td>
+              <td>${team.goalsDiff}</td>
+              <td class="pts">${team.points}</td>
+            </tr>
+          `;
+        });
+
+        tableHTML += `</tbody></table>`;
+        container.innerHTML = tableHTML;
+
+      } catch (error) {
+        container.innerHTML = '<p class="error">Error loading standings. Check API key or internet.</p>';
+        console.error(error);
+      }
+    }
+
+    // Load on select change
+    leagueSelect.addEventListener("change", (e) => {
+      fetchStandings(e.target.value);
+    });
+
+    // Hamburger menu
+    const hamburger = document.querySelector('.hamburger');
+    const navLinks = document.querySelector('.nav-links');
+    hamburger.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+  </script>
+</body>
+</html>

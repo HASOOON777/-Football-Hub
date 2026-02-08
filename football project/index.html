@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Football Hub - Latest football matches, news, standings, stats and competitions">
+  <title>Football Hub - Your Football World</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">⚽ Football Hub </div>
+    
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="matches.html">Matches</a></li>
+      <li><a href="standings.html">Standings</a></li>
+      <li><a href="news.html">News</a></li>
+      <li><a href="stats.html">Stats</a></li>
+      <li><a href="competition.html">Competitions</a></li>
+    </ul>
+
+    <div class="hamburger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero">
+    <div class="hero-content">
+      <h1>🏆 Welcome to Football Hub</h1>
+      <p>Live scores • Breaking news • Deep stats • All in one place</p>
+      <a href="matches.html" class="cta-button">View Live Matches →</a>
+    </div>
+  </header>
+
+  <!-- Quick sections -->
+  <section class="quick-info">
+    <div class="card">
+      <h3>Latest Matches</h3>
+      <p>Check today's fixtures and results</p>
+      <a href="matches.html">Go to Matches</a>
+    </div>
+    <div class="card">
+      <h3>Standings</h3>
+      <p>Premier League, La Liga, Serie A & more</p>
+      <a href="standings.html">View Tables</a>
+    </div>
+    <div class="card">
+      <h3>Top News</h3>
+      <p>Transfers, injuries, big moments</p>
+      <a href="news.html">Read Now</a>
+    </div>
+  </section>
+
+  <!-- Featured GIF (بتاعتك D1.gif) -->
+  <section class="featured-gif">
+    <h2>Feel the Passion ⚽🔥</h2>
+    <img src="D1.gif" alt="Football Action GIF" class="main-gif">
+  </section>
+
+  <script src="script.js"></script>
+
+  <!-- JavaScript بسيط للـ Hamburger Menu -->
+  <script>
+    const hamburger = document.querySelector('.hamburger');
+    const navLinks = document.querySelector('.nav-links');
+
+    hamburger.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+      hamburger.classList.toggle('toggle');
+    });
+  </script>
+</body>
+</html>
